@@ -73,6 +73,16 @@ Kaneo supports three Redis deployment modes for WebSocket Pub/Sub. When any Redi
 
 > **Note:** Only one mode should be configured at a time. If multiple are set, the priority is: Cluster > Sentinel > Standalone.
 
+#### AI Agents Configuration
+
+Workspace AI agents (Mastra) run in-process and are optional. Without these variables every agent route returns 404 and the UI hides agent features.
+
+- `AI_API_KEY` - API key for the OpenAI-compatible model provider. Set this to enable agents.
+- `AI_BASE_URL` - Optional base URL for an OpenAI-compatible provider (e.g., `https://api.openai.com/v1`). Defaults to the OpenAI endpoint.
+- `AI_MODEL` - Optional default model name for agents that do not specify one (e.g., `gpt-4o-mini`). Each workspace agent can override its own model.
+
+> **Note:** Agents call the model synchronously inside the API process with a 60-second timeout. Redis is not required for agents.
+
 #### SMTP Configuration
 
 For sending emails (workspace invitations, magic links, etc.), configure these variables:

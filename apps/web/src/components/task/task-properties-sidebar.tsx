@@ -1,4 +1,5 @@
 import {
+  Bot,
   Calendar,
   CalendarClock,
   CalendarDays,
@@ -18,7 +19,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import useGetAgentsByWorkspace from "@/hooks/queries/agent/use-get-agents-by-workspace";
 import { useGetColumns } from "@/hooks/queries/column/use-get-columns";
+import useGetConfig from "@/hooks/queries/config/use-get-config";
 import useGetGiteaIntegration from "@/hooks/queries/gitea-integration/use-get-gitea-integration";
 import useGetGithubIntegration from "@/hooks/queries/github-integration/use-get-github-integration";
 import useGetLabelsByTask from "@/hooks/queries/label/use-get-labels-by-task";
@@ -39,6 +42,7 @@ import { getPriorityLabel, getStatusDisplayLabel } from "@/lib/i18n/domain";
 import { resolveLabelColor } from "@/lib/label-color";
 import { getPriorityIcon } from "@/lib/priority";
 import { toast } from "@/lib/toast";
+import TaskAgentPopover from "./task-agent-popover";
 import TaskAssigneePopover from "./task-assignee-popover";
 import TaskDueDatePopover from "./task-due-date-popover";
 import TaskLabelsPopover from "./task-labels-popover";
@@ -91,6 +95,12 @@ export default function TaskPropertiesSidebar({
   const taskIsCompleted = isTaskCompleted(task?.status ?? "", columns);
   const { data: workspaceUsers } = useGetActiveWorkspaceUsers(workspaceId);
   const { data: taskLabels = [] } = useGetLabelsByTask(taskId ?? "");
+  const { data: config } = useGetConfig();
+  const hasAi = config?.hasAi === true;
+  const { data: workspaceAgents = [] } = useGetAgentsByWorkspace(workspaceId);
+  const assignedAgent = workspaceAgents.find(
+    (agent) => agent.id === task?.agentId,
+  );
   const { data: githubIntegration } = useGetGithubIntegration(projectId);
   const { data: giteaIntegration } = useGetGiteaIntegration(projectId);
   const { data: workspaceProjects = [] } = useGetProjects({ workspaceId });
@@ -261,6 +271,20 @@ export default function TaskPropertiesSidebar({
                     </span>
                   </Button>
                 </TaskAssigneePopover>
+              )}
+              {hasAi && task && (
+                <TaskAgentPopover task={task} workspaceId={workspaceId}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="justify-start h-7 px-1.5 gap-1.5"
+                  >
+                    <Bot className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span className="text-xs font-semibold truncate max-w-[100px]">
+                      {assignedAgent?.name || t("tasks:popover.agent.none")}
+                    </span>
+                  </Button>
+                </TaskAgentPopover>
               )}
               {task && (
                 <TaskStartDatePopover task={task}>
@@ -452,6 +476,20 @@ export default function TaskPropertiesSidebar({
                       </span>
                     </Button>
                   </TaskAssigneePopover>
+                )}
+                {hasAi && task && (
+                  <TaskAgentPopover task={task} workspaceId={workspaceId}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start h-7 px-1.5 gap-1.5"
+                    >
+                      <Bot className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs font-semibold truncate max-w-[100px]">
+                        {assignedAgent?.name || t("tasks:popover.agent.none")}
+                      </span>
+                    </Button>
+                  </TaskAgentPopover>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>
@@ -645,6 +683,20 @@ export default function TaskPropertiesSidebar({
                       </span>
                     </Button>
                   </TaskAssigneePopover>
+                )}
+                {hasAi && task && (
+                  <TaskAgentPopover task={task} workspaceId={workspaceId}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="justify-start h-7 px-1.5 gap-1.5 w-full"
+                    >
+                      <Bot className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs font-semibold truncate max-w-[100px]">
+                        {assignedAgent?.name || t("tasks:popover.agent.none")}
+                      </span>
+                    </Button>
+                  </TaskAgentPopover>
                 )}
                 {task && (
                   <TaskStartDatePopover task={task}>

@@ -284,6 +284,9 @@ const taskUpdateEvents = [
   "comment.created",
   "comment.deleted",
   "comment.updated",
+  "agent.assigned",
+  "agent.unassigned",
+  "agent_run.updated",
 ];
 
 subscribeToEvent<{
@@ -371,6 +374,9 @@ for (const eventName of taskUpdateEvents) {
       case "comment.deleted":
       case "comment.updated":
         type = "COMMENT_UPDATED";
+        break;
+      case "agent_run.updated":
+        type = "AGENT_RUN_UPDATED";
         break;
       default:
         type = "TASK_UPDATED";

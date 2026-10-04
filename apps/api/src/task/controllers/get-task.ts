@@ -17,6 +17,7 @@ async function getTask(taskId: string) {
       position: taskTable.position,
       createdAt: taskTable.createdAt,
       userId: taskTable.userId,
+      agentId: taskTable.agentId,
       assigneeName: userTable.name,
       assigneeId: userTable.id,
       projectId: taskTable.projectId,

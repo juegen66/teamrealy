@@ -805,6 +805,34 @@
 			"deleteError": "Failed to delete label",
 			"nameRequired": "Label name is required"
 		},
+		"workspaceAgents": {
+			"pageTitle": "Agent Settings",
+			"title": "Agents",
+			"subtitle": "Create AI agents that work on tasks inside Kaneo.",
+			"cardDescription": "Agents run on assigned tasks with your permissions. Their comments are attributed to you.",
+			"createAgent": "Create Agent",
+			"editAgent": "Edit Agent",
+			"deleteAgent": "Delete",
+			"saveAgent": "Save",
+			"nameLabel": "Agent name",
+			"namePlaceholder": "Enter agent name",
+			"instructionsLabel": "Instructions",
+			"instructionsPlaceholder": "Describe what this agent should do, e.g. 'Triage new tasks and summarize them as comments.'",
+			"modelLabel": "Model (optional)",
+			"modelPlaceholder": "e.g. gpt-4o-mini",
+			"createDescription": "Agents work on tasks with your permissions. Their comments appear under your name.",
+			"editDescription": "Update the agent's name, instructions, or model. Tasks keep their assignment.",
+			"deleteConfirmTitle": "Delete this agent?",
+			"deleteConfirmDescription": "Tasks using this agent will be unassigned and its active runs cancelled. Past runs and comments keep the agent's name.",
+			"empty": "No agents yet. Create your first agent to assign it to tasks.",
+			"createSuccess": "Agent created",
+			"updateSuccess": "Agent updated",
+			"deleteSuccess": "Agent deleted",
+			"createError": "Failed to create agent",
+			"updateError": "Failed to update agent",
+			"deleteError": "Failed to delete agent",
+			"fieldsRequired": "Name and instructions are required"
+		},
 		"projectGeneral": {
 			"pageTitle": "Project Settings",
 			"title": "General Settings",
@@ -1534,10 +1562,14 @@
 		"moved": "moved task from \"{{from}}\" to \"{{to}}\"",
 		"created": "created this task",
 		"githubUser": "GitHub User",
+		"agentAssigned": "assigned {{agent}} to this task",
+		"agentUnassigned": "unassigned {{agent}} from this task",
+		"agentRunFailed": "{{agent}} run failed",
 		"comment": {
 			"github": "GitHub",
 			"viewGithubProfile": "View GitHub Profile",
 			"commentedOnGithub": "commented on GitHub",
+			"viaAgent": "{{agent}} (via {{user}})",
 			"cannotBeEmpty": "Comment cannot be empty",
 			"mustBeLoggedInToEdit": "You must be logged in to edit comments",
 			"updated": "Comment updated",
@@ -1831,6 +1863,22 @@
 			"assignee": {
 				"unassigned": "Unassigned",
 				"updateError": "Failed to update task assignee"
+			},
+			"agent": {
+				"none": "No agent",
+				"empty": "No agents configured for this workspace",
+				"running": "Running…",
+				"succeeded": "Completed",
+				"failed": "Failed",
+				"cancelled": "Cancelled",
+				"assignError": "Failed to update task agent",
+				"rerun": "Run again",
+				"rerunSuccess": "Agent run started",
+				"rerunError": "Failed to rerun agent",
+				"cancel": "Stop",
+				"cancelSuccess": "Agent run stopped",
+				"cancelError": "Failed to stop agent run",
+				"unassign": "Unassign"
 			},
 			"status": {
 				"updateError": "Failed to update task status"

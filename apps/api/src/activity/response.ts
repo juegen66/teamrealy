@@ -24,6 +24,14 @@ export const activitySchema = z
       description: "The tool it was imported from, e.g. planka, trello, jira.",
     }),
     externalUrl: z.string().nullable(),
+    agentId: z.string().nullable().openapi({
+      description:
+        "Set when the activity was authored by an AI agent; nulled if the agent row is deleted.",
+    }),
+    agentName: z.string().nullable().openapi({
+      description:
+        "Durable snapshot of the agent name for agent-authored comments and agent events.",
+    }),
   })
   .openapi("Activity");
 

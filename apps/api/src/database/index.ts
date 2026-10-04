@@ -4,6 +4,8 @@ import { Pool } from "pg";
 import {
   accountTableRelations,
   activityTableRelations,
+  agentRunTableRelations,
+  agentTableRelations,
   apikeyTableRelations,
   assetTableRelations,
   columnTableRelations,
@@ -38,6 +40,8 @@ import { resolveDatabaseConnectionString } from "./resolve-database-url";
 import {
   accountTable,
   activityTable,
+  agentRunTable,
+  agentTable,
   apikeyTable,
   assetTable,
   billingEventTable,
@@ -81,6 +85,8 @@ config();
 
 export const schema = {
   accountTable,
+  agentRunTable,
+  agentTable,
   assetTable,
   activityTable,
   apikeyTable,
@@ -118,6 +124,8 @@ export const schema = {
   workspaceTable,
   workspaceUserTable,
   accountTableRelations,
+  agentRunTableRelations,
+  agentTableRelations,
   assetTableRelations,
   activityTableRelations,
   apikeyTableRelations,

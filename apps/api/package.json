@@ -30,6 +30,7 @@
     "openapi:export": "tsx scripts/export-openapi.ts"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^4.0.80",
     "@aws-sdk/client-s3": "^3.1104.0",
     "@aws-sdk/s3-request-presigner": "^3.1104.0",
     "@better-auth/api-key": "^1.6.26",
@@ -39,6 +40,7 @@
     "@hono/zod-openapi": "^1.6.1",
     "@kaneo/email": "workspace:*",
     "@kaneo/permissions": "workspace:*",
+    "@mastra/core": "^1.71.0",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@modelcontextprotocol/server": "2.0.0",
     "@octokit/webhooks": "^14.2.0",

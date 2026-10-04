@@ -2,6 +2,8 @@ import { relations } from "drizzle-orm";
 import {
   accountTable,
   activityTable,
+  agentRunTable,
+  agentTable,
   apikeyTable,
   assetTable,
   columnTable,
@@ -78,6 +80,7 @@ export const workspaceTableRelations = relations(
     assets: many(assetTable),
     invitations: many(invitationTable),
     notificationWorkspaceRules: many(userNotificationWorkspaceRuleTable),
+    agents: many(agentTable),
   }),
 );
 
@@ -158,6 +161,11 @@ export const taskTableRelations = relations(taskTable, ({ one, many }) => ({
   targetRelations: many(taskRelationTable, { relationName: "targetTask" }),
   remindersSent: many(taskReminderSentTable),
   customFieldValues: many(customFieldValueTable),
+  agent: one(agentTable, {
+    fields: [taskTable.agentId],
+    references: [agentTable.id],
+  }),
+  agentRuns: many(agentRunTable),
 }));
 
 export const timeEntryTableRelations = relations(timeEntryTable, ({ one }) => ({
@@ -178,6 +186,33 @@ export const activityTableRelations = relations(activityTable, ({ one }) => ({
   }),
   user: one(userTable, {
     fields: [activityTable.userId],
+    references: [userTable.id],
+  }),
+  agent: one(agentTable, {
+    fields: [activityTable.agentId],
+    references: [agentTable.id],
+  }),
+}));
+
+export const agentTableRelations = relations(agentTable, ({ one, many }) => ({
+  workspace: one(workspaceTable, {
+    fields: [agentTable.workspaceId],
+    references: [workspaceTable.id],
+  }),
+  runs: many(agentRunTable),
+}));
+
+export const agentRunTableRelations = relations(agentRunTable, ({ one }) => ({
+  task: one(taskTable, {
+    fields: [agentRunTable.taskId],
+    references: [taskTable.id],
+  }),
+  agent: one(agentTable, {
+    fields: [agentRunTable.agentId],
+    references: [agentTable.id],
+  }),
+  initiator: one(userTable, {
+    fields: [agentRunTable.initiatorId],
     references: [userTable.id],
   }),
 }));

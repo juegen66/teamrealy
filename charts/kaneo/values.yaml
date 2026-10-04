@@ -135,6 +135,13 @@ kaneo:
   #       secretKeyRef:
   #         name: oauth-secret
   #         key: client-id
+  #   # Optional AI agents: setting AI_API_KEY enables workspace agents (Mastra).
+  #   # AI_BASE_URL and AI_MODEL are optional provider overrides.
+  #   - name: AI_API_KEY
+  #     valueFrom:
+  #       secretKeyRef:
+  #         name: openai-secret
+  #         key: api-key
   extraEnvFrom: []
   # extraEnvFrom:
   #   - secretRef:

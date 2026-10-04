@@ -284,4 +284,48 @@ subscribeToEvent<{
   });
 });
 
+subscribeToEvent<{
+  taskId: string;
+  projectId: string;
+  userId: string;
+  agentId: string;
+  agentName: string | null;
+  type: string;
+}>("agent.assigned", async (data) => {
+  await createActivity(data.taskId, "agent_assigned", data.userId, null, {
+    agentId: data.agentId,
+    agentName: data.agentName,
+  });
+});
+
+subscribeToEvent<{
+  taskId: string;
+  projectId: string;
+  userId: string;
+  agentId: string;
+  agentName: string | null;
+  type: string;
+}>("agent.unassigned", async (data) => {
+  await createActivity(data.taskId, "agent_unassigned", data.userId, null, {
+    agentId: data.agentId,
+    agentName: data.agentName,
+  });
+});
+
+subscribeToEvent<{
+  taskId: string;
+  projectId: string;
+  runId: string;
+  userId: string | null;
+  agentName: string;
+  error: string | null;
+  type: string;
+}>("agent_run.failed", async (data) => {
+  await createActivity(data.taskId, "agent_run_failed", data.userId, null, {
+    runId: data.runId,
+    agentName: data.agentName,
+    error: data.error,
+  });
+});
+
 export default activity;

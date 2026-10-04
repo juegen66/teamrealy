@@ -1,5 +1,5 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { ExternalLink, Pencil, Trash2 } from "lucide-react";
+import { Bot, ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CommentEditor from "@/components/activity/comment-editor";
@@ -37,6 +37,8 @@ type CommentCardProps = {
   createdAt: string;
   externalSource?: string | null;
   externalUrl?: string | null;
+  agentId?: string | null;
+  agentName?: string | null;
 };
 
 export default function CommentCard({
@@ -47,6 +49,8 @@ export default function CommentCard({
   createdAt,
   externalSource,
   externalUrl,
+  agentId,
+  agentName,
 }: CommentCardProps) {
   const { t } = useTranslation();
   const { user: currentUser } = useAuth();
@@ -57,7 +61,12 @@ export default function CommentCard({
     useDeleteComment(taskId);
   const queryClient = useQueryClient();
 
-  const canEdit = currentUser?.id === user?.id;
+  // An agent comment is identified by its durable agentName snapshot (the
+  // agentId can be nulled when the agent row is deleted). Agent comments are
+  // immutable, but the initiator may still delete them.
+  const isAgentComment = Boolean(agentId || agentName);
+  const canEdit = !isAgentComment && currentUser?.id === user?.id;
+  const canDelete = currentUser?.id === user?.id;
   const isFromGitHub = externalSource === "github";
   const githubProfileUrl =
     isFromGitHub && user?.name ? `https://github.com/${user.name}` : null;
@@ -116,13 +125,25 @@ export default function CommentCard({
             <HoverCardTrigger>
               <div className="flex cursor-pointer items-center gap-2">
                 <Avatar className="h-6 w-6">
-                  <AvatarImage src={user?.image ?? ""} alt={user?.name || ""} />
+                  <AvatarImage
+                    src={agentName ? "" : (user?.image ?? "")}
+                    alt={agentName ?? (user?.name || "")}
+                  />
                   <AvatarFallback className="bg-muted text-xs font-medium">
-                    {getInitials(user?.name)}
+                    {agentName ? (
+                      <Bot className="h-3 w-3" />
+                    ) : (
+                      getInitials(user?.name)
+                    )}
                   </AvatarFallback>
                 </Avatar>
                 <span className="text-sm font-medium text-foreground/92 hover:text-foreground transition-colors">
-                  {user?.name}
+                  {agentName
+                    ? t("activity:comment.viaAgent", {
+                        agent: agentName,
+                        user: user?.name ?? "",
+                      })
+                    : user?.name}
                 </span>
               </div>
             </HoverCardTrigger>
@@ -201,39 +222,43 @@ export default function CommentCard({
           )}
         </div>
 
-        {canEdit && !isEditing && (
+        {(canEdit || canDelete) && !isEditing && (
           <div className="absolute top-2 right-2 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleEdit}
-                  className="h-6 w-6 rounded-md p-0 text-muted-foreground hover:text-foreground"
-                >
-                  <Pencil className="size-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">{t("activity:comment.edit")}</p>
-              </TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => deleteComment({ activityId: commentId })}
-                  disabled={isDeleting}
-                  className="h-6 w-6 rounded-md p-0 text-muted-foreground hover:text-destructive"
-                >
-                  <Trash2 className="size-3.5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-xs">{t("common:actions.delete")}</p>
-              </TooltipContent>
-            </Tooltip>
+            {canEdit && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleEdit}
+                    className="h-6 w-6 rounded-md p-0 text-muted-foreground hover:text-foreground"
+                  >
+                    <Pencil className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{t("activity:comment.edit")}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {canDelete && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => deleteComment({ activityId: commentId })}
+                    disabled={isDeleting}
+                    className="h-6 w-6 rounded-md p-0 text-muted-foreground hover:text-destructive"
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p className="text-xs">{t("common:actions.delete")}</p>
+                </TooltipContent>
+              </Tooltip>
+            )}
           </div>
         )}
 

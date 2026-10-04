@@ -1,4 +1,4 @@
-import { Calendar, CircleAlert, History, UserRound } from "lucide-react";
+import { Bot, Calendar, CircleAlert, History, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 import useGetWorkspaceUsers from "@/hooks/queries/workspace-users/use-get-workspace-users";
@@ -23,6 +23,8 @@ type ActivityItem = {
   createdAt: string;
   userId: string | null;
   taskId: string;
+  agentId?: string | null;
+  agentName?: string | null;
   externalUserName?: string | null;
   externalUserAvatar?: string | null;
   externalSource?: string | null;
@@ -60,6 +62,10 @@ function getActivityTypeIcon(type: string) {
     case "assignee_changed":
     case "unassigned":
       return <UserRound className={iconClass} />;
+    case "agent_assigned":
+    case "agent_unassigned":
+    case "agent_run_failed":
+      return <Bot className={iconClass} />;
     default:
       return <History className={iconClass} />;
   }
@@ -403,6 +409,36 @@ function renderActivityContent({
     }
   }
 
+  if (activity.type === "agent_assigned") {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {t("activity:agentAssigned", {
+          agent: String(eventData?.agentName ?? ""),
+        })}
+      </span>
+    );
+  }
+
+  if (activity.type === "agent_unassigned") {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {t("activity:agentUnassigned", {
+          agent: String(eventData?.agentName ?? ""),
+        })}
+      </span>
+    );
+  }
+
+  if (activity.type === "agent_run_failed") {
+    return (
+      <span className="text-sm text-muted-foreground">
+        {t("activity:agentRunFailed", {
+          agent: String(eventData?.agentName ?? ""),
+        })}
+      </span>
+    );
+  }
+
   return (
     <span className="text-sm text-muted-foreground">
       {content || toDisplayCase(activity.type)}
@@ -460,6 +496,8 @@ function Activity({
             createdAt={activity.createdAt}
             externalSource={activity.externalSource}
             externalUrl={activity.externalUrl}
+            agentId={activity.agentId}
+            agentName={activity.agentName}
           />
         </TimelineContent>
       </TimelineItem>

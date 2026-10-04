@@ -16,6 +16,9 @@ export const taskSchema = z
       .string()
       .nullable()
       .openapi({ description: "The assignee, if any." }),
+    agentId: z.string().nullable().openapi({
+      description: "The assigned AI agent, if any.",
+    }),
     title: z.string(),
     description: z.string().nullable(),
     status: z.string().openapi({
@@ -77,6 +80,7 @@ export const boardTaskSchema = z
     assigneeId: z.string().nullable(),
     assigneeImage: z.string().nullable(),
     projectId: z.string(),
+    agentId: z.string().nullable(),
     labels: z.array(taskLabelSchema),
     externalLinks: z.array(taskExternalLinkSchema),
   })

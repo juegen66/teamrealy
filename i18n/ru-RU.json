@@ -1356,6 +1356,34 @@
 				"number": "Number",
 				"text": "Text"
 			}
+		},
+		"workspaceAgents": {
+			"cardDescription": "Agents run on assigned tasks with your permissions. Their comments are attributed to you.",
+			"createAgent": "Create Agent",
+			"createDescription": "Agents work on tasks with your permissions. Their comments appear under your name.",
+			"createError": "Failed to create agent",
+			"createSuccess": "Agent created",
+			"deleteAgent": "Delete",
+			"deleteConfirmDescription": "Tasks using this agent will be unassigned and its active runs cancelled. Past runs and comments keep the agent's name.",
+			"deleteConfirmTitle": "Delete this agent?",
+			"deleteError": "Failed to delete agent",
+			"deleteSuccess": "Agent deleted",
+			"editAgent": "Edit Agent",
+			"editDescription": "Update the agent's name, instructions, or model. Tasks keep their assignment.",
+			"empty": "No agents yet. Create your first agent to assign it to tasks.",
+			"fieldsRequired": "Name and instructions are required",
+			"instructionsLabel": "Instructions",
+			"instructionsPlaceholder": "Describe what this agent should do, e.g. 'Triage new tasks and summarize them as comments.'",
+			"modelLabel": "Model (optional)",
+			"modelPlaceholder": "e.g. gpt-4o-mini",
+			"nameLabel": "Agent name",
+			"namePlaceholder": "Enter agent name",
+			"pageTitle": "Agent Settings",
+			"saveAgent": "Save",
+			"subtitle": "Create AI agents that work on tasks inside Kaneo.",
+			"title": "Agents",
+			"updateError": "Failed to update agent",
+			"updateSuccess": "Agent updated"
 		}
 	},
 	"navigation": {
@@ -1647,10 +1675,14 @@
 				"mermaid": {
 					"renderFailed": "Не удалось отобразить диаграмму Mermaid"
 				}
-			}
+			},
+			"viaAgent": "{{agent}} (via {{user}})"
 		},
 		"moved": "переместил задачу из «{{from}}» в «{{to}}»",
-		"created": "создал эту задачу"
+		"created": "создал эту задачу",
+		"agentAssigned": "assigned {{agent}} to this task",
+		"agentRunFailed": "{{agent}} run failed",
+		"agentUnassigned": "unassigned {{agent}} from this task"
 	},
 	"tasks": {
 		"title": "Задачи",
@@ -1887,6 +1919,22 @@
 					"rose": "Роза",
 					"crimson": "Малиновый"
 				}
+			},
+			"agent": {
+				"assignError": "Failed to update task agent",
+				"cancel": "Stop",
+				"cancelError": "Failed to stop agent run",
+				"cancelled": "Cancelled",
+				"cancelSuccess": "Agent run stopped",
+				"empty": "No agents configured for this workspace",
+				"failed": "Failed",
+				"none": "No agent",
+				"rerun": "Run again",
+				"rerunError": "Failed to rerun agent",
+				"rerunSuccess": "Agent run started",
+				"running": "Running…",
+				"succeeded": "Completed",
+				"unassign": "Unassign"
 			}
 		},
 		"backlog": {

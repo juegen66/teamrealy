@@ -5,7 +5,7 @@ import {
   redirect,
   useLocation,
 } from "@tanstack/react-router";
-import { CreditCard, Settings, Shield, Tag } from "lucide-react";
+import { Bot, CreditCard, Settings, Shield, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import SettingsSidebar from "@/components/SettingsSidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -85,6 +85,17 @@ function RouteComponent() {
       url: "/dashboard/settings/workspace/labels",
       icon: Tag,
     },
+    ...(config?.hasAi
+      ? [
+          {
+            title: t("settings:workspaceAgents.title", {
+              defaultValue: "Agents",
+            }),
+            url: "/dashboard/settings/workspace/agents",
+            icon: Bot,
+          },
+        ]
+      : []),
     ...(config?.billingEnabled
       ? [
           {

@@ -14,6 +14,8 @@ import { compress } from "hono/compress";
 import { cors } from "hono/cors";
 import { HTTPException } from "hono/http-exception";
 import activity from "./activity";
+import agent from "./agent";
+import { failInterruptedAgentRuns } from "./agent/runner/runner";
 import { auth } from "./auth";
 import { organizationRoutes } from "./auth-openapi";
 import billing from "./billing";
@@ -579,6 +581,7 @@ export function createApp() {
   const columnApi = api.route("/column", column);
   const activityApi = api.route("/activity", activity);
   const commentApi = api.route("/comment", comment);
+  const agentApi = api.route("/agent", agent);
   const timeEntryApi = api.route("/time-entry", timeEntry);
   const labelApi = api.route("/label", label);
   const notificationApi = api.route("/notification", notification);
@@ -756,6 +759,7 @@ export function createApp() {
     api,
     injectWebSocket,
     activityApi,
+    agentApi,
     billingApi,
     columnApi,
     commentApi,
@@ -818,6 +822,7 @@ export async function runStartupTasks() {
   await migrateGitHubIntegration();
   await migrateColumns();
   await seedDefaultWorkspaceRoles();
+  await failInterruptedAgentRuns();
 
   initializePlugins();
   initializeScheduler();
@@ -876,6 +881,7 @@ const {
   app,
   injectWebSocket,
   activityApi,
+  agentApi,
   billingApi,
   columnApi,
   commentApi,
@@ -924,6 +930,7 @@ export type AppType =
   | typeof columnApi
   | typeof activityApi
   | typeof commentApi
+  | typeof agentApi
   | typeof timeEntryApi
   | typeof labelApi
   | typeof notificationApi

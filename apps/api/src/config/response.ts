@@ -17,5 +17,9 @@ export const configSchema = z
     customOAuthAutoLogin: z.boolean(),
     customOAuthLogoutUrl: z.string().nullable(),
     billingEnabled: z.boolean(),
+    hasAi: z.boolean().openapi({
+      description:
+        "Whether workspace AI agents are available on this instance. Requires AI_API_KEY and a non-demo mode.",
+    }),
   })
   .openapi("Config");

@@ -416,6 +416,10 @@ export const taskTable = pgTable(
       onDelete: "set null",
       onUpdate: "cascade",
     }),
+    agentId: text("agent_id").references(() => agentTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
     title: text("title").notNull(),
     description: text("description"),
     status: text("status").notNull().default("to-do"),
@@ -565,6 +569,11 @@ export const activityTable = pgTable(
       onDelete: "set null",
       onUpdate: "cascade",
     }),
+    agentId: text("agent_id").references(() => agentTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    agentName: text("agent_name"),
     content: text("content"),
     eventData: jsonb("event_data"),
     externalUserName: text("external_user_name"),
@@ -984,6 +993,70 @@ export const taskRelationTable = pgTable(
   (table) => [
     index("task_relation_source_idx").on(table.sourceTaskId),
     index("task_relation_target_idx").on(table.targetTaskId),
+  ],
+);
+
+export const agentTable = pgTable(
+  "agent",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    instructions: text("instructions").notNull(),
+    model: text("model"),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("agent_workspaceId_idx").on(table.workspaceId)],
+);
+
+export const agentRunTable = pgTable(
+  "agent_run",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    taskId: text("task_id")
+      .notNull()
+      .references(() => taskTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    agentId: text("agent_id").references(() => agentTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    // Snapshot so deleted agents still leave a name on historical runs.
+    agentName: text("agent_name").notNull(),
+    initiatorId: text("initiator_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    trigger: text("trigger").notNull(),
+    status: text("status").notNull().default("queued"),
+    error: text("error"),
+    startedAt: timestamp("started_at", { mode: "date" }),
+    finishedAt: timestamp("finished_at", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("agent_run_taskId_idx").on(table.taskId),
+    index("agent_run_agentId_idx").on(table.agentId),
+    index("agent_run_status_idx").on(table.status),
   ],
 );
 

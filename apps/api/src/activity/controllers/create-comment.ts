@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import { maybeStartCommentRun } from "../../agent/runner/comment-trigger";
 import db from "../../database";
 import {
   activityTable,
@@ -16,6 +17,7 @@ async function createComment(
   userId: string,
   content: string,
   external?: { userName: string; source: string },
+  agent?: { id?: string; name: string },
 ) {
   const [activity] = await db
     .insert(activityTable)
@@ -28,6 +30,12 @@ async function createComment(
         ? {
             externalUserName: external.userName,
             externalSource: external.source,
+          }
+        : {}),
+      ...(agent
+        ? {
+            agentId: agent.id ?? null,
+            agentName: agent.name,
           }
         : {}),
     })
@@ -98,6 +106,12 @@ async function createComment(
       resourceId: taskId,
       resourceType: "task",
     });
+  }
+
+  // Human comments (no agent attribution, no import source) on a task with an
+  // assigned agent may kick off a new run; agent and imported comments never do.
+  if (!agent && !external) {
+    await maybeStartCommentRun(taskId, userId);
   }
 
   return activity;

@@ -63,7 +63,8 @@ export function useProjectWebSocket(projectId: string) {
             message.type === "TASK_LABEL_UPDATED" ||
             message.type === "TASK_MOVED" ||
             message.type === "TASK_RELATION_UPDATED" ||
-            message.type === "COMMENT_UPDATED"
+            message.type === "COMMENT_UPDATED" ||
+            message.type === "AGENT_RUN_UPDATED"
           ) {
             queryClient.invalidateQueries({
               queryKey: ["tasks", message.projectId],
@@ -109,6 +110,12 @@ export function useProjectWebSocket(projectId: string) {
               });
               queryClient.invalidateQueries({
                 queryKey: ["comments", message.taskId],
+              });
+            }
+
+            if (message.type === "AGENT_RUN_UPDATED") {
+              queryClient.invalidateQueries({
+                queryKey: ["agent-run", message.taskId],
               });
             }
           }
