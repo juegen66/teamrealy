@@ -86,7 +86,7 @@ const updateAgentRoute = createRoute({
   tags: ["Agents"],
   summary: "Update agent",
   description:
-    "Update an agent's name, instructions, or model. Requires workspace:manage_settings.",
+    "Update an agent's name, instructions, model, or cron schedule and timezone. Requires workspace:manage_settings.",
   middleware: [
     requireAi(),
     workspaceAccess.fromAgent(),
@@ -237,16 +237,11 @@ const agent = apiRouter<BaseVariables & { workspaceId: string }>()
     c.json(await getAgentsByWorkspace(c.req.valid("param").workspaceId), 200),
   )
   .openapi(createAgentRoute, async (c) => {
-    const { workspaceId, name, instructions, model } = c.req.valid("json");
-    return c.json(
-      await createAgent({ workspaceId, name, instructions, model }),
-      200,
-    );
+    return c.json(await createAgent(c.req.valid("json")), 200);
   })
   .openapi(updateAgentRoute, async (c) => {
     const { id } = c.req.valid("param");
-    const { name, instructions, model } = c.req.valid("json");
-    return c.json(await updateAgent(id, { name, instructions, model }), 200);
+    return c.json(await updateAgent(id, c.req.valid("json")), 200);
   })
   .openapi(deleteAgentRoute, async (c) =>
     c.json(await deleteAgent(c.req.valid("param").id), 200),

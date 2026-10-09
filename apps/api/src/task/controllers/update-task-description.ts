@@ -1,5 +1,6 @@
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import type { AgentActor } from "../../agent/actor";
 import db from "../../database";
 import { taskTable, userTable } from "../../database/schema";
 import { publishEvent } from "../../events";
@@ -11,10 +12,12 @@ async function updateTaskDescription({
   id,
   description,
   currentUserId,
+  agent,
 }: {
   id: string;
   description: string;
-  currentUserId: string;
+  currentUserId: string | null;
+  agent?: AgentActor;
 }) {
   const existingTask = await db.query.taskTable.findFirst({
     where: eq(taskTable.id, id),
@@ -42,6 +45,7 @@ async function updateTaskDescription({
     taskId: updatedTask.id,
     projectId: updatedTask.projectId,
     userId: currentUserId,
+    agent,
     oldDescription: existingTask.description,
     newDescription: description,
     type: "description_changed",
@@ -60,10 +64,12 @@ async function updateTaskDescription({
   );
 
   if (newlyMentioned.length > 0) {
-    const [editor] = await db
-      .select({ name: userTable.name })
-      .from(userTable)
-      .where(eq(userTable.id, currentUserId));
+    const [editor] = currentUserId
+      ? await db
+          .select({ name: userTable.name })
+          .from(userTable)
+          .where(eq(userTable.id, currentUserId))
+      : [];
 
     for (const mentionedId of newlyMentioned) {
       await createNotification({
@@ -71,7 +77,7 @@ async function updateTaskDescription({
         type: "task_mention",
         eventData: {
           taskTitle: updatedTask.title,
-          mentionerName: editor?.name ?? null,
+          mentionerName: editor?.name ?? agent?.name ?? null,
         },
         resourceId: updatedTask.id,
         resourceType: "task",

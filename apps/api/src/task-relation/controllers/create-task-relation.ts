@@ -1,5 +1,6 @@
 import { and, eq, or } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import type { AgentActor } from "../../agent/actor";
 import db from "../../database";
 import {
   projectTable,
@@ -13,12 +14,14 @@ async function createTaskRelation({
   targetTaskId,
   relationType,
   userId,
+  agent,
   workspaceId,
 }: {
   sourceTaskId: string;
   targetTaskId: string;
   relationType: string;
-  userId: string;
+  userId: string | null;
+  agent?: AgentActor;
   workspaceId: string;
 }) {
   if (sourceTaskId === targetTaskId) {
@@ -113,6 +116,7 @@ async function createTaskRelation({
     taskId: sourceTaskId,
     projectId: sourceTask.projectId,
     userId,
+    agent,
   });
 
   return relation;

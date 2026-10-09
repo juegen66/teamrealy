@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import type { AgentActor } from "../../agent/actor";
 import db from "../../database";
 import { columnTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
@@ -9,10 +10,12 @@ async function updateTaskStatus({
   id,
   status,
   currentUserId,
+  agent,
 }: {
   id: string;
   status: string;
-  currentUserId: string;
+  currentUserId: string | null;
+  agent?: AgentActor;
 }) {
   const existingTask = await db.query.taskTable.findFirst({
     where: eq(taskTable.id, id),
@@ -49,6 +52,7 @@ async function updateTaskStatus({
     taskId: updatedTask.id,
     projectId: updatedTask.projectId,
     userId: currentUserId,
+    agent,
     oldStatus: existingTask.status,
     newStatus: status,
     title: updatedTask.title,

@@ -12,6 +12,8 @@ async function updateAgent({
   name,
   instructions,
   model,
+  schedule,
+  scheduleTimezone,
 }: UpdateAgentRequest) {
   const response = await client.agent[":id"].$put({
     param: { id },
@@ -19,6 +21,9 @@ async function updateAgent({
       name,
       instructions,
       ...(model ? { model } : {}),
+      // null clears the value on the server; undefined leaves it unchanged.
+      ...(schedule !== undefined ? { schedule } : {}),
+      ...(scheduleTimezone !== undefined ? { scheduleTimezone } : {}),
     },
   });
 

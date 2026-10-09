@@ -1,5 +1,6 @@
 import { and, eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import type { AgentActor } from "../../agent/actor";
 import db from "../../database";
 import {
   labelTable,
@@ -19,7 +20,12 @@ import {
 
 type LabelRow = typeof labelTableType.$inferSelect;
 
-async function assignLabelToTask(id: string, taskId: string, userId: string) {
+async function assignLabelToTask(
+  id: string,
+  taskId: string,
+  userId: string | null,
+  agent?: AgentActor,
+) {
   const label = await db.query.labelTable.findFirst({
     where: (label, { eq }) => eq(label.id, id),
   });
@@ -167,6 +173,7 @@ async function assignLabelToTask(id: string, taskId: string, userId: string) {
     projectId: task.projectId,
     taskId: task.id,
     userId,
+    agent,
     type: "label_assigned",
   });
 

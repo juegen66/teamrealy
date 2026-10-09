@@ -14,7 +14,7 @@ import { parseMentionIds } from "../../utils/parse-mentions";
 
 async function createComment(
   taskId: string,
-  userId: string,
+  userId: string | null,
   content: string,
   external?: { userName: string; source: string },
   agent?: { id?: string; name: string },
@@ -47,10 +47,13 @@ async function createComment(
     });
   }
 
-  const [user] = await db
-    .select({ name: userTable.name })
-    .from(userTable)
-    .where(eq(userTable.id, userId));
+  const [user] = userId
+    ? await db
+        .select({ name: userTable.name })
+        .from(userTable)
+        .where(eq(userTable.id, userId))
+    : [];
+  const authorName = user?.name ?? agent?.name;
 
   const [task] = await db
     .select({
@@ -66,7 +69,7 @@ async function createComment(
   if (task) {
     await publishEvent("comment.created", {
       ...activity,
-      comment: `**${user?.name}** commented:\n> ${content}`,
+      comment: `**${authorName}** commented:\n> ${content}`,
       projectId: task.projectId,
     });
   }
@@ -79,7 +82,7 @@ async function createComment(
       type: "task_mention",
       eventData: {
         taskTitle: task?.title ?? null,
-        mentionerName: user?.name ?? null,
+        mentionerName: authorName ?? null,
         projectId: task?.projectId ?? null,
         workspaceId: task?.workspaceId ?? null,
       },
@@ -98,7 +101,7 @@ async function createComment(
       type: "task_comment",
       eventData: {
         taskTitle: task.title,
-        commenterName: user?.name ?? null,
+        commenterName: authorName ?? null,
         commentPreview: content.slice(0, 160),
         projectId: task.projectId,
         workspaceId: task.workspaceId,
@@ -110,7 +113,7 @@ async function createComment(
 
   // Human comments (no agent attribution, no import source) on a task with an
   // assigned agent may kick off a new run; agent and imported comments never do.
-  if (!agent && !external) {
+  if (!agent && !external && userId) {
     await maybeStartCommentRun(taskId, userId);
   }
 

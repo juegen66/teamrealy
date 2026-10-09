@@ -1011,6 +1011,9 @@ export const agentTable = pgTable(
     name: text("name").notNull(),
     instructions: text("instructions").notNull(),
     model: text("model"),
+    schedule: text("schedule"),
+    // IANA name; null means UTC.
+    scheduleTimezone: text("schedule_timezone"),
     createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .defaultNow()
@@ -1026,12 +1029,11 @@ export const agentRunTable = pgTable(
     id: text("id")
       .$defaultFn(() => createId())
       .primaryKey(),
-    taskId: text("task_id")
-      .notNull()
-      .references(() => taskTable.id, {
-        onDelete: "cascade",
-        onUpdate: "cascade",
-      }),
+    // Null for runs that are not tied to a task, such as scheduled runs.
+    taskId: text("task_id").references(() => taskTable.id, {
+      onDelete: "cascade",
+      onUpdate: "cascade",
+    }),
     agentId: text("agent_id").references(() => agentTable.id, {
       onDelete: "set null",
       onUpdate: "cascade",

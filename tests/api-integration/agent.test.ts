@@ -148,6 +148,196 @@ describe("API integration: agents", () => {
     expect(remaining).toHaveLength(0);
   });
 
+  describe("schedule and timezone", () => {
+    const jsonHeaders = { "content-type": "application/json" };
+
+    async function setup() {
+      const owner = await createWorkspaceMember({ role: "owner" });
+      mockAuthenticatedSession(owner.user);
+      const { app } = createApp();
+      return { owner, app };
+    }
+
+    it("stores and returns a valid schedule and timezone on create", async () => {
+      const { owner, app } = await setup();
+
+      const response = await app.request("/api/agent", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          workspaceId: owner.workspace.id,
+          name: "Daily Bot",
+          instructions: "Report daily.",
+          schedule: "0 9 * * 1-5",
+          scheduleTimezone: "Asia/Tokyo",
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      const created = (await response.json()) as Record<string, unknown>;
+      expect(created).toMatchObject({
+        schedule: "0 9 * * 1-5",
+        scheduleTimezone: "Asia/Tokyo",
+      });
+    });
+
+    it("returns null schedule fields when none are set", async () => {
+      const { owner, app } = await setup();
+
+      const response = await app.request("/api/agent", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          workspaceId: owner.workspace.id,
+          name: "Plain Bot",
+          instructions: "No schedule.",
+        }),
+      });
+
+      expect(response.status).toBe(200);
+      const created = (await response.json()) as Record<string, unknown>;
+      expect(created.schedule).toBeNull();
+      expect(created.scheduleTimezone).toBeNull();
+    });
+
+    it("rejects an invalid cron or timezone on create with 400", async () => {
+      const { owner, app } = await setup();
+
+      const badCron = await app.request("/api/agent", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          workspaceId: owner.workspace.id,
+          name: "Bad Cron",
+          instructions: "x",
+          schedule: "not a cron",
+        }),
+      });
+      expect(badCron.status).toBe(400);
+
+      const badZone = await app.request("/api/agent", {
+        method: "POST",
+        headers: jsonHeaders,
+        body: JSON.stringify({
+          workspaceId: owner.workspace.id,
+          name: "Bad Zone",
+          instructions: "x",
+          schedule: "0 9 * * *",
+          scheduleTimezone: "Mars/Olympus",
+        }),
+      });
+      expect(badZone.status).toBe(400);
+
+      const rows = await db.query.agentTable.findMany({
+        where: eq(schema.agentTable.workspaceId, owner.workspace.id),
+      });
+      expect(rows).toHaveLength(0);
+    });
+
+    it("updates, keeps, and clears the schedule on update", async () => {
+      const { owner, app } = await setup();
+      const [agent] = await db
+        .insert(schema.agentTable)
+        .values({
+          workspaceId: owner.workspace.id,
+          name: "Update Bot",
+          instructions: "x",
+          schedule: "0 9 * * *",
+          scheduleTimezone: "Europe/Berlin",
+        })
+        .returning();
+
+      const put = (body: Record<string, unknown>) =>
+        app.request(`/api/agent/${agent.id}`, {
+          method: "PUT",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            name: "Update Bot",
+            instructions: "x",
+            ...body,
+          }),
+        });
+
+      // Omitted fields leave the stored values unchanged.
+      const kept = await put({});
+      expect(kept.status).toBe(200);
+      expect(await kept.json()).toMatchObject({
+        schedule: "0 9 * * *",
+        scheduleTimezone: "Europe/Berlin",
+      });
+
+      const changed = await put({
+        schedule: "30 18 * * *",
+        scheduleTimezone: "America/New_York",
+      });
+      expect(changed.status).toBe(200);
+      expect(await changed.json()).toMatchObject({
+        schedule: "30 18 * * *",
+        scheduleTimezone: "America/New_York",
+      });
+
+      // Null and the empty string both clear.
+      const clearedWithNull = await put({
+        schedule: null,
+        scheduleTimezone: null,
+      });
+      expect(clearedWithNull.status).toBe(200);
+      expect(await clearedWithNull.json()).toMatchObject({
+        schedule: null,
+        scheduleTimezone: null,
+      });
+
+      await put({ schedule: "0 9 * * *", scheduleTimezone: "Asia/Tokyo" });
+      const clearedWithEmpty = await put({
+        schedule: "",
+        scheduleTimezone: "",
+      });
+      expect(clearedWithEmpty.status).toBe(200);
+      expect(await clearedWithEmpty.json()).toMatchObject({
+        schedule: null,
+        scheduleTimezone: null,
+      });
+    });
+
+    it("rejects an invalid cron or timezone on update with 400 and keeps the row", async () => {
+      const { owner, app } = await setup();
+      const [agent] = await db
+        .insert(schema.agentTable)
+        .values({
+          workspaceId: owner.workspace.id,
+          name: "Stable Bot",
+          instructions: "x",
+          schedule: "0 9 * * *",
+          scheduleTimezone: "UTC",
+        })
+        .returning();
+
+      const put = (body: Record<string, unknown>) =>
+        app.request(`/api/agent/${agent.id}`, {
+          method: "PUT",
+          headers: jsonHeaders,
+          body: JSON.stringify({
+            name: "Stable Bot",
+            instructions: "x",
+            ...body,
+          }),
+        });
+
+      expect((await put({ schedule: "every day" })).status).toBe(400);
+      expect((await put({ scheduleTimezone: "Mars/Olympus" })).status).toBe(
+        400,
+      );
+
+      const row = await db.query.agentTable.findFirst({
+        where: eq(schema.agentTable.id, agent.id),
+      });
+      expect(row).toMatchObject({
+        schedule: "0 9 * * *",
+        scheduleTimezone: "UTC",
+      });
+    });
+  });
+
   it("assigns and unassigns an agent to a task as a member", async () => {
     const member = await createWorkspaceMember();
     const { project, columns } = await createProjectFixture({

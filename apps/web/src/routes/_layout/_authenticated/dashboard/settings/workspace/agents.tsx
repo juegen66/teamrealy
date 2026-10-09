@@ -47,6 +47,8 @@ import { useWorkspacePermission } from "@/hooks/use-workspace-permission";
 import { getInitials } from "@/lib/get-initials";
 import { toast } from "@/lib/toast";
 
+const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
 export const Route = createFileRoute(
   "/_layout/_authenticated/dashboard/settings/workspace/agents",
 )({
@@ -71,6 +73,8 @@ function RouteComponent() {
   const [newName, setNewName] = useState("");
   const [newInstructions, setNewInstructions] = useState("");
   const [newModel, setNewModel] = useState("");
+  const [newSchedule, setNewSchedule] = useState("");
+  const [newTimezone, setNewTimezone] = useState("");
   const [createError, setCreateError] = useState("");
 
   // Edit dialog state
@@ -80,10 +84,14 @@ function RouteComponent() {
     name: string;
     instructions: string;
     model: string | null;
+    schedule: string | null;
+    scheduleTimezone: string | null;
   } | null>(null);
   const [editName, setEditName] = useState("");
   const [editInstructions, setEditInstructions] = useState("");
   const [editModel, setEditModel] = useState("");
+  const [editSchedule, setEditSchedule] = useState("");
+  const [editTimezone, setEditTimezone] = useState("");
   const [editError, setEditError] = useState("");
 
   // Delete dialog state
@@ -97,6 +105,8 @@ function RouteComponent() {
     setNewName("");
     setNewInstructions("");
     setNewModel("");
+    setNewSchedule("");
+    setNewTimezone("");
     setCreateError("");
   };
 
@@ -123,6 +133,12 @@ function RouteComponent() {
         name: trimmed,
         instructions: trimmedInstructions,
         ...(newModel.trim() ? { model: newModel.trim() } : {}),
+        ...(newSchedule.trim()
+          ? {
+              schedule: newSchedule.trim(),
+              scheduleTimezone: newTimezone.trim() || browserTimezone,
+            }
+          : {}),
       });
       toast.success(
         t("settings:workspaceAgents.createSuccess", {
@@ -147,11 +163,15 @@ function RouteComponent() {
     name: string;
     instructions: string;
     model: string | null;
+    schedule: string | null;
+    scheduleTimezone: string | null;
   }) => {
     setEditingAgent(agent);
     setEditName(agent.name);
     setEditInstructions(agent.instructions);
     setEditModel(agent.model ?? "");
+    setEditSchedule(agent.schedule ?? "");
+    setEditTimezone(agent.scheduleTimezone ?? "");
     setEditError("");
     setEditOpen(true);
   };
@@ -176,6 +196,11 @@ function RouteComponent() {
         name: trimmed,
         instructions: trimmedInstructions,
         ...(editModel.trim() ? { model: editModel.trim() } : {}),
+        // null clears; an entered schedule always carries a timezone.
+        schedule: editSchedule.trim() || null,
+        scheduleTimezone: editSchedule.trim()
+          ? editTimezone.trim() || browserTimezone
+          : null,
       });
       toast.success(
         t("settings:workspaceAgents.updateSuccess", {
@@ -310,6 +335,14 @@ function RouteComponent() {
                               {agent.model}
                             </p>
                           )}
+                          {agent.schedule && (
+                            <p className="text-[11px] text-muted-foreground/70">
+                              {t("settings:workspaceAgents.scheduleSummary", {
+                                schedule: agent.schedule,
+                                timezone: agent.scheduleTimezone ?? "UTC",
+                              })}
+                            </p>
+                          )}
                         </div>
                       </div>
                       {canManage && (
@@ -328,6 +361,8 @@ function RouteComponent() {
                                 name: agent.name,
                                 instructions: agent.instructions,
                                 model: agent.model,
+                                schedule: agent.schedule,
+                                scheduleTimezone: agent.scheduleTimezone,
                               })
                             }
                           >
@@ -438,6 +473,65 @@ function RouteComponent() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="new-agent-schedule">
+                {t("settings:workspaceAgents.scheduleLabel", {
+                  defaultValue: "Schedule (optional)",
+                })}
+              </Label>
+              <Input
+                id="new-agent-schedule"
+                value={newSchedule}
+                onChange={(e) => {
+                  setNewSchedule(e.target.value);
+                  if (e.target.value.trim() && !newTimezone) {
+                    setNewTimezone(browserTimezone);
+                  }
+                  setCreateError("");
+                }}
+                placeholder={t("settings:workspaceAgents.schedulePlaceholder", {
+                  defaultValue: "e.g. 0 9 * * 1-5",
+                })}
+                aria-describedby="new-agent-schedule-hint"
+              />
+              <p
+                id="new-agent-schedule-hint"
+                className="text-xs text-muted-foreground"
+              >
+                {t("settings:workspaceAgents.scheduleHint", {
+                  defaultValue:
+                    "Cron expression with five fields. Leave empty to disable scheduled runs.",
+                })}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="new-agent-timezone">
+                {t("settings:workspaceAgents.timezoneLabel", {
+                  defaultValue: "Timezone",
+                })}
+              </Label>
+              <Input
+                id="new-agent-timezone"
+                value={newTimezone}
+                onChange={(e) => {
+                  setNewTimezone(e.target.value);
+                  setCreateError("");
+                }}
+                placeholder={browserTimezone}
+                aria-describedby="new-agent-timezone-hint"
+              />
+              <p
+                id="new-agent-timezone-hint"
+                className="text-xs text-muted-foreground"
+              >
+                {t("settings:workspaceAgents.timezoneHint", {
+                  defaultValue:
+                    "IANA timezone name used to evaluate the schedule.",
+                })}
+              </p>
+            </div>
+
             {createError && (
               <p className="text-sm text-destructive">{createError}</p>
             )}
@@ -526,6 +620,65 @@ function RouteComponent() {
                 value={editModel}
                 onChange={(e) => setEditModel(e.target.value)}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-agent-schedule">
+                {t("settings:workspaceAgents.scheduleLabel", {
+                  defaultValue: "Schedule (optional)",
+                })}
+              </Label>
+              <Input
+                id="edit-agent-schedule"
+                value={editSchedule}
+                onChange={(e) => {
+                  setEditSchedule(e.target.value);
+                  if (e.target.value.trim() && !editTimezone) {
+                    setEditTimezone(browserTimezone);
+                  }
+                  setEditError("");
+                }}
+                placeholder={t("settings:workspaceAgents.schedulePlaceholder", {
+                  defaultValue: "e.g. 0 9 * * 1-5",
+                })}
+                aria-describedby="edit-agent-schedule-hint"
+              />
+              <p
+                id="edit-agent-schedule-hint"
+                className="text-xs text-muted-foreground"
+              >
+                {t("settings:workspaceAgents.scheduleHint", {
+                  defaultValue:
+                    "Cron expression with five fields. Leave empty to disable scheduled runs.",
+                })}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-agent-timezone">
+                {t("settings:workspaceAgents.timezoneLabel", {
+                  defaultValue: "Timezone",
+                })}
+              </Label>
+              <Input
+                id="edit-agent-timezone"
+                value={editTimezone}
+                onChange={(e) => {
+                  setEditTimezone(e.target.value);
+                  setEditError("");
+                }}
+                placeholder={browserTimezone}
+                aria-describedby="edit-agent-timezone-hint"
+              />
+              <p
+                id="edit-agent-timezone-hint"
+                className="text-xs text-muted-foreground"
+              >
+                {t("settings:workspaceAgents.timezoneHint", {
+                  defaultValue:
+                    "IANA timezone name used to evaluate the schedule.",
+                })}
+              </p>
             </div>
 
             {editError && (

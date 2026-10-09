@@ -30,11 +30,13 @@ export async function runMastraAgent({
     ...(process.env.AI_BASE_URL ? { baseURL: process.env.AI_BASE_URL } : {}),
   });
 
+  // Use Chat Completions so OpenAI-compatible providers (custom AI_BASE_URL)
+  // work; openai(modelId) defaults to the Responses API since AI SDK 5.
   const agent = new Agent({
     id: name,
     name,
     instructions: `${instructions}\n\n${SUFFIX_INSTRUCTIONS}`,
-    model: openai(model || process.env.AI_MODEL || "gpt-4o-mini"),
+    model: openai.chat(model || process.env.AI_MODEL || "gpt-4o-mini"),
     tools,
   });
 

@@ -1,5 +1,6 @@
 import * as Sentry from "@sentry/node";
 import { Cron } from "croner";
+import { runScheduledAgents } from "./agent-scheduled-runs";
 import { checkDueDateReminders } from "./due-date-reminders";
 import { checkProjectWebhookReminders } from "./project-webhook-reminders";
 import { reconcileWorkspaceSeats } from "./seat-reconciliation";
@@ -66,8 +67,14 @@ export function initializeScheduler(): void {
   jobs.push(
     new Cron("23 * * * *", withCheckIn("trial-reminders", checkTrialReminders)),
   );
+  jobs.push(
+    new Cron(
+      "* * * * *",
+      withCheckIn("agent-scheduled-runs", runScheduledAgents),
+    ),
+  );
   console.log(
-    "⏰ Scheduler started (reminders every 5 minutes, seat reconciliation and trial reminders hourly)",
+    "⏰ Scheduler started (reminders every 5 minutes, seat reconciliation and trial reminders hourly, agent scheduled runs every minute)",
   );
 }
 

@@ -1,5 +1,6 @@
 import { and, eq, max } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import type { AgentActor } from "../../agent/actor";
 import db from "../../database";
 import {
   columnTable,
@@ -43,6 +44,7 @@ function deduplicateCustomFields(
 async function createTask({
   projectId,
   currentUserId,
+  agent,
   userId,
   title,
   status,
@@ -53,7 +55,8 @@ async function createTask({
   customFields,
 }: {
   projectId: string;
-  currentUserId: string;
+  currentUserId: string | null;
+  agent?: AgentActor;
   userId?: string;
   title: string;
   status: string;
@@ -174,6 +177,7 @@ async function createTask({
     taskId: createdTask.id,
     userId: createdTask.userId ?? "",
     currentUserId: currentUserId,
+    agent,
     type: "created",
     content: null,
   });

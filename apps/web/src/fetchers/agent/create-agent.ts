@@ -11,6 +11,8 @@ async function createAgent({
   name,
   instructions,
   model,
+  schedule,
+  scheduleTimezone,
 }: CreateAgentRequest) {
   const response = await client.agent.$post({
     json: {
@@ -18,6 +20,8 @@ async function createAgent({
       name,
       instructions,
       ...(model ? { model } : {}),
+      ...(schedule ? { schedule } : {}),
+      ...(schedule && scheduleTimezone ? { scheduleTimezone } : {}),
     },
   });
 

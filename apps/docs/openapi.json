@@ -1312,7 +1312,10 @@
             "type": "string"
           },
           "taskId": {
-            "type": "string"
+            "type": [
+              "string",
+              "null"
+            ]
           },
           "agentId": {
             "type": [
@@ -1331,7 +1334,7 @@
           },
           "trigger": {
             "type": "string",
-            "description": "assigned, comment, or rerun"
+            "description": "assigned, comment, rerun, or scheduled"
           },
           "status": {
             "type": "string",

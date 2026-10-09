@@ -330,6 +330,20 @@
 			"when": 1790664926415,
 			"tag": "0046_fair_shockwave",
 			"breakpoints": true
+		},
+		{
+			"idx": 47,
+			"version": "7",
+			"when": 1791453829130,
+			"tag": "0047_noisy_kid_colt",
+			"breakpoints": true
+		},
+		{
+			"idx": 48,
+			"version": "7",
+			"when": 1791512481974,
+			"tag": "0048_tan_daimon_hellstrom",
+			"breakpoints": true
 		}
 	]
 }

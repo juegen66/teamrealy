@@ -1,5 +1,4 @@
 import { createTool } from "@mastra/core/tools";
-import { HTTPException } from "hono/http-exception";
 import { z } from "zod";
 import createComment from "../../activity/controllers/create-comment";
 import assignLabelToTask from "../../label/controllers/assign-label-to-task";
@@ -10,27 +9,14 @@ import updateTaskPriority from "../../task/controllers/update-task-priority";
 import updateTaskStatus from "../../task/controllers/update-task-status";
 import createTaskRelation from "../../task-relation/controllers/create-task-relation";
 import { buildRunContext } from "./context";
+import { actorFor, type RunToolContext, toolError } from "./tool-context";
+import { assertLabelOnTask } from "./workspace-scope";
+import { buildWorkspaceTools } from "./workspace-tools";
 
-export type RunToolContext = {
-  taskId: string;
-  projectId: string;
-  workspaceId: string;
-  initiatorId: string;
-  agent: { id: string | null; name: string };
-  state: { commentWritten: boolean };
-};
+export type { RunToolContext } from "./tool-context";
 
-function toolError(error: unknown): string {
-  if (error instanceof HTTPException) {
-    return error.message;
-  }
-  if (error instanceof Error) {
-    return error.message;
-  }
-  return "Unknown tool error";
-}
-
-export function buildAgentTools(ctx: RunToolContext) {
+// These tools act on the run's own task, so they only exist when it has one.
+function buildTaskTools(ctx: RunToolContext, taskId: string) {
   return {
     getTaskContext: createTool({
       id: "getTaskContext",
@@ -38,7 +24,7 @@ export function buildAgentTools(ctx: RunToolContext) {
         "Get the current state of the Kaneo task you are working on, including status, description, labels, subtasks, and recent comments.",
       inputSchema: z.object({}),
       execute: async () => {
-        return { context: await buildRunContext(ctx.taskId, "assigned") };
+        return { context: await buildRunContext(taskId, "assigned") };
       },
     }),
     createComment: createTool({
@@ -53,7 +39,7 @@ export function buildAgentTools(ctx: RunToolContext) {
       execute: async ({ content }) => {
         ctx.state.commentWritten = true;
         try {
-          await createComment(ctx.taskId, ctx.initiatorId, content, undefined, {
+          await createComment(taskId, ctx.initiatorId, content, undefined, {
             id: ctx.agent.id ?? undefined,
             name: ctx.agent.name,
           });
@@ -76,17 +62,19 @@ export function buildAgentTools(ctx: RunToolContext) {
       }),
       execute: async ({ title, status }) => {
         try {
+          const actor = actorFor(ctx);
           const task = await createTask({
             projectId: ctx.projectId,
-            currentUserId: ctx.initiatorId,
+            ...actor,
             title,
             status: status ?? "to-do",
           });
           await createTaskRelation({
-            sourceTaskId: ctx.taskId,
+            sourceTaskId: taskId,
             targetTaskId: task.id,
             relationType: "subtask",
-            userId: ctx.initiatorId,
+            userId: actor.currentUserId,
+            agent: actor.agent,
             workspaceId: ctx.workspaceId,
           });
           return { ok: true, taskId: task.id };
@@ -107,9 +95,9 @@ export function buildAgentTools(ctx: RunToolContext) {
       execute: async ({ description }) => {
         try {
           await updateTaskDescription({
-            id: ctx.taskId,
+            id: taskId,
             description,
-            currentUserId: ctx.initiatorId,
+            ...actorFor(ctx),
           });
           return { ok: true };
         } catch (error) {
@@ -126,11 +114,7 @@ export function buildAgentTools(ctx: RunToolContext) {
       }),
       execute: async ({ status }) => {
         try {
-          await updateTaskStatus({
-            id: ctx.taskId,
-            status,
-            currentUserId: ctx.initiatorId,
-          });
+          await updateTaskStatus({ id: taskId, status, ...actorFor(ctx) });
           return { ok: true };
         } catch (error) {
           return { ok: false, error: toolError(error) };
@@ -149,9 +133,9 @@ export function buildAgentTools(ctx: RunToolContext) {
       execute: async ({ priority }) => {
         try {
           await updateTaskPriority({
-            id: ctx.taskId,
+            id: taskId,
             priority,
-            currentUserId: ctx.initiatorId,
+            ...actorFor(ctx),
           });
           return { ok: true };
         } catch (error) {
@@ -170,7 +154,8 @@ export function buildAgentTools(ctx: RunToolContext) {
       }),
       execute: async ({ labelId }) => {
         try {
-          await assignLabelToTask(labelId, ctx.taskId, ctx.initiatorId);
+          const { currentUserId, agent } = actorFor(ctx);
+          await assignLabelToTask(labelId, taskId, currentUserId, agent);
           return { ok: true };
         } catch (error) {
           return { ok: false, error: toolError(error) };
@@ -186,12 +171,22 @@ export function buildAgentTools(ctx: RunToolContext) {
       }),
       execute: async ({ labelId }) => {
         try {
-          await unassignLabelFromTask(labelId, ctx.initiatorId);
+          await assertLabelOnTask(labelId, taskId);
+          const { currentUserId, agent } = actorFor(ctx);
+          await unassignLabelFromTask(labelId, currentUserId, agent);
           return { ok: true };
         } catch (error) {
           return { ok: false, error: toolError(error) };
         }
       },
     }),
+  };
+}
+
+export function buildAgentTools(ctx: RunToolContext) {
+  const { taskId } = ctx;
+  return {
+    ...buildWorkspaceTools(ctx),
+    ...(taskId ? buildTaskTools(ctx, taskId) : {}),
   };
 }

@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
 import createComment from "../../activity/controllers/create-comment";
 import db from "../../database";
@@ -9,7 +9,7 @@ import {
   taskTable,
 } from "../../database/schema";
 import { publishEvent } from "../../events";
-import { buildRunContext } from "./context";
+import { buildRunContext, buildTasklessRunContext } from "./context";
 import { runMastraAgent } from "./mastra-agent";
 import { buildAgentTools } from "./tools";
 
@@ -23,6 +23,9 @@ export function isActiveRunStatus(status: string): boolean {
 }
 
 async function publishAgentRunUpdated(run: typeof agentRunTable.$inferSelect) {
+  // Task-less runs have no project to broadcast to.
+  if (!run.taskId) return;
+
   const [task] = await db
     .select({ projectId: taskTable.projectId })
     .from(taskTable)
@@ -49,27 +52,36 @@ export async function createAndStartRun({
   initiatorId,
   trigger,
 }: {
-  taskId: string;
+  taskId: string | null;
   agentId: string | null;
   agentName: string;
   initiatorId: string | null;
-  trigger: "assigned" | "comment" | "rerun";
+  trigger: "assigned" | "comment" | "rerun" | "scheduled";
 }) {
-  const [existing] = await db
-    .select({ id: agentRunTable.id })
-    .from(agentRunTable)
-    .where(
-      and(
-        eq(agentRunTable.taskId, taskId),
-        inArray(agentRunTable.status, ["queued", "running"]),
-      ),
-    )
-    .limit(1);
+  // Task-less runs are serialized per agent so a slow scheduled run cannot
+  // overlap with the next tick.
+  const activeScope = taskId
+    ? eq(agentRunTable.taskId, taskId)
+    : agentId
+      ? and(isNull(agentRunTable.taskId), eq(agentRunTable.agentId, agentId))
+      : undefined;
 
-  if (existing) {
-    throw new HTTPException(409, {
-      message: "This task already has an active agent run",
-    });
+  if (activeScope) {
+    const [existing] = await db
+      .select({ id: agentRunTable.id })
+      .from(agentRunTable)
+      .where(
+        and(activeScope, inArray(agentRunTable.status, ["queued", "running"])),
+      )
+      .limit(1);
+
+    if (existing) {
+      throw new HTTPException(409, {
+        message: taskId
+          ? "This task already has an active agent run"
+          : "This agent already has an active scheduled run",
+      });
+    }
   }
 
   const [run] = await db
@@ -168,25 +180,33 @@ async function executeAgentRun(runId: string) {
 
     await publishAgentRunUpdated(run);
 
-    const context = await buildRunContext(run.taskId, run.trigger);
-
     const [agentRow] = run.agentId
       ? await db
           .select({
+            workspaceId: agentTable.workspaceId,
             instructions: agentTable.instructions,
             model: agentTable.model,
+            scheduleTimezone: agentTable.scheduleTimezone,
           })
           .from(agentTable)
           .where(eq(agentTable.id, run.agentId))
           .limit(1)
       : [];
 
+    const context = run.taskId
+      ? await buildRunContext(run.taskId, run.trigger)
+      : buildTasklessRunContext(
+          agentRow?.workspaceId ?? "",
+          run.agentName,
+          agentRow?.scheduleTimezone ?? null,
+        );
+
     const state = { commentWritten: false };
     const tools = buildAgentTools({
       taskId: run.taskId,
       projectId: context.projectId,
       workspaceId: context.workspaceId,
-      initiatorId: run.initiatorId ?? "",
+      initiatorId: run.initiatorId,
       agent: { id: run.agentId, name: run.agentName },
       state,
     });
@@ -207,10 +227,10 @@ async function executeAgentRun(runId: string) {
 
     // A model that produced text without calling the comment tool still gets
     // to say something: persist its closing message as an agent comment.
-    if (result.text.trim() && !state.commentWritten) {
+    if (run.taskId && result.text.trim() && !state.commentWritten) {
       await createComment(
         run.taskId,
-        run.initiatorId ?? "",
+        run.initiatorId,
         result.text.trim(),
         undefined,
         { id: run.agentId ?? undefined, name: run.agentName },
@@ -258,7 +278,8 @@ async function executeAgentRun(runId: string) {
 
     if (finished) {
       await publishAgentRunUpdated(finished);
-      if (finished.status === "failed") {
+      // agent_run.failed feeds the task timeline, which task-less runs lack.
+      if (finished.status === "failed" && finished.taskId) {
         const [project] = await db
           .select({ projectId: projectTable.id })
           .from(projectTable)
@@ -299,6 +320,8 @@ export async function failInterruptedAgentRuns() {
     .returning();
 
   for (const run of affected) {
+    if (!run.taskId) continue;
+
     const [project] = await db
       .select({ projectId: projectTable.id })
       .from(projectTable)

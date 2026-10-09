@@ -8,9 +8,10 @@ import {
   taskTable,
   userTable,
 } from "../../database/schema";
+import { resolveTimezone } from "../schedule";
 
 export type RunContext = {
-  taskId: string;
+  taskId: string | null;
   projectId: string;
   workspaceId: string;
   title: string;
@@ -38,6 +39,43 @@ function formatComment(comment: {
   const name = comment.userName ?? "Unknown";
   const text = (comment.content ?? "").replace(/<[^>]*>/g, "").slice(0, 500);
   return `- ${comment.createdAt.toISOString()} ${name}: ${text}`;
+}
+
+// Runs without a task (scheduled runs) have no task state to load. The stub
+// keeps the RunContext shape so callers do not branch on every field.
+export function buildTasklessRunContext(
+  workspaceId: string,
+  agentName: string,
+  timezone: string | null = null,
+  now: Date = new Date(),
+): RunContext {
+  const zone = resolveTimezone(timezone);
+  const localTime = new Intl.DateTimeFormat("en-US", {
+    timeZone: zone,
+    dateStyle: "full",
+    timeStyle: "long",
+  }).format(now);
+
+  return {
+    taskId: null,
+    projectId: "",
+    workspaceId,
+    title: "",
+    description: null,
+    status: "",
+    priority: "",
+    dueDate: null,
+    assigneeName: null,
+    labels: [],
+    workspaceLabels: [],
+    subtasks: [],
+    recentComments: [],
+    userMessage: [
+      `This is a scheduled run for agent "${agentName}". No task is attached to this run.`,
+      `Current time (${zone}): ${localTime}.`,
+      "Use the workspace tools (listProjects, listMembers, searchTasks, getTask, createTask, assignTask, commentOnTask) to find, create, assign, and comment on tasks as your instructions describe.",
+    ].join("\n"),
+  };
 }
 
 export async function buildRunContext(

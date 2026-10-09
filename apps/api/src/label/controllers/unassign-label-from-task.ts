@@ -1,11 +1,16 @@
 import { eq } from "drizzle-orm";
 import { HTTPException } from "hono/http-exception";
+import type { AgentActor } from "../../agent/actor";
 import db from "../../database";
 import { labelTable, projectTable, taskTable } from "../../database/schema";
 import { publishEvent } from "../../events";
 import { removeLabelFromGitHub } from "../../plugins/github/utils/sync-label-to-github";
 
-async function unassignLabelFromTask(id: string, userId: string) {
+async function unassignLabelFromTask(
+  id: string,
+  userId: string | null,
+  agent?: AgentActor,
+) {
   const label = await db.query.labelTable.findFirst({
     where: (label, { eq }) => eq(label.id, id),
   });
@@ -64,6 +69,7 @@ async function unassignLabelFromTask(id: string, userId: string) {
     projectId: task.projectId,
     taskId: deletedLabel.taskId,
     userId,
+    agent,
     type: "label_unassigned",
   });
 
