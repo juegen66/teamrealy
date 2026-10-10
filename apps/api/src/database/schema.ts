@@ -8,6 +8,7 @@ import {
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
   unique,
@@ -335,6 +336,116 @@ export const projectTable = pgTable(
     index("project_workspaceId_position_idx").on(
       table.workspaceId,
       table.position,
+    ),
+  ],
+);
+
+export const initiativeTable = pgTable(
+  "initiative",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    workspaceId: text("workspace_id")
+      .notNull()
+      .references(() => workspaceTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    name: text("name").notNull(),
+    // One-line subtitle shown under the name; `description` is the long form.
+    summary: text("summary"),
+    description: text("description"),
+    icon: text("icon").default("Target"),
+    color: text("color"),
+    // planned | active | paused | completed | cancelled
+    status: text("status").notNull().default("planned"),
+    // no-priority | low | medium | high | urgent
+    priority: text("priority").notNull().default("no-priority"),
+    ownerId: text("owner_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    targetDate: timestamp("target_date", { mode: "date" }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [index("initiative_workspaceId_idx").on(table.workspaceId)],
+);
+
+export const initiativeProjectTable = pgTable(
+  "initiative_project",
+  {
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiativeTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projectTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    primaryKey({
+      name: "initiative_project_pk",
+      columns: [table.initiativeId, table.projectId],
+    }),
+    index("initiative_project_projectId_idx").on(table.projectId),
+  ],
+);
+
+export const initiativeLinkTable = pgTable(
+  "initiative_link",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiativeTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    title: text("title").notNull(),
+    url: text("url").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [index("initiative_link_initiativeId_idx").on(table.initiativeId)],
+);
+
+export const initiativeUpdateTable = pgTable(
+  "initiative_update",
+  {
+    id: text("id")
+      .$defaultFn(() => createId())
+      .primaryKey(),
+    initiativeId: text("initiative_id")
+      .notNull()
+      .references(() => initiativeTable.id, {
+        onDelete: "cascade",
+        onUpdate: "cascade",
+      }),
+    userId: text("user_id").references(() => userTable.id, {
+      onDelete: "set null",
+      onUpdate: "cascade",
+    }),
+    // on-track | at-risk | off-track
+    health: text("health").notNull(),
+    body: text("body").notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("initiative_update_initiativeId_createdAt_idx").on(
+      table.initiativeId,
+      table.createdAt,
     ),
   ],
 );

@@ -12,6 +12,10 @@ import {
   customFieldValueTable,
   externalLinkTable,
   githubIntegrationTable,
+  initiativeLinkTable,
+  initiativeProjectTable,
+  initiativeTable,
+  initiativeUpdateTable,
   integrationTable,
   invitationTable,
   labelTable,
@@ -81,6 +85,7 @@ export const workspaceTableRelations = relations(
     invitations: many(invitationTable),
     notificationWorkspaceRules: many(userNotificationWorkspaceRuleTable),
     agents: many(agentTable),
+    initiatives: many(initiativeTable),
   }),
 );
 
@@ -112,6 +117,7 @@ export const projectTableRelations = relations(
     githubIntegration: many(githubIntegrationTable),
     integrations: many(integrationTable),
     notificationWorkspaceProjects: many(userNotificationWorkspaceProjectTable),
+    initiativeProjects: many(initiativeProjectTable),
   }),
 );
 
@@ -451,6 +457,61 @@ export const customFieldValueTableRelations = relations(
     task: one(taskTable, {
       fields: [customFieldValueTable.taskId],
       references: [taskTable.id],
+    }),
+  }),
+);
+
+export const initiativeTableRelations = relations(
+  initiativeTable,
+  ({ one, many }) => ({
+    workspace: one(workspaceTable, {
+      fields: [initiativeTable.workspaceId],
+      references: [workspaceTable.id],
+    }),
+    owner: one(userTable, {
+      fields: [initiativeTable.ownerId],
+      references: [userTable.id],
+    }),
+    initiativeProjects: many(initiativeProjectTable),
+    links: many(initiativeLinkTable),
+    updates: many(initiativeUpdateTable),
+  }),
+);
+
+export const initiativeProjectTableRelations = relations(
+  initiativeProjectTable,
+  ({ one }) => ({
+    initiative: one(initiativeTable, {
+      fields: [initiativeProjectTable.initiativeId],
+      references: [initiativeTable.id],
+    }),
+    project: one(projectTable, {
+      fields: [initiativeProjectTable.projectId],
+      references: [projectTable.id],
+    }),
+  }),
+);
+
+export const initiativeLinkTableRelations = relations(
+  initiativeLinkTable,
+  ({ one }) => ({
+    initiative: one(initiativeTable, {
+      fields: [initiativeLinkTable.initiativeId],
+      references: [initiativeTable.id],
+    }),
+  }),
+);
+
+export const initiativeUpdateTableRelations = relations(
+  initiativeUpdateTable,
+  ({ one }) => ({
+    initiative: one(initiativeTable, {
+      fields: [initiativeUpdateTable.initiativeId],
+      references: [initiativeTable.id],
+    }),
+    user: one(userTable, {
+      fields: [initiativeUpdateTable.userId],
+      references: [userTable.id],
     }),
   }),
 );

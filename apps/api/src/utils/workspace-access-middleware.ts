@@ -20,7 +20,8 @@ type WorkspaceIdSource =
         | "column"
         | "workflowRule"
         | "customField"
-        | "agent";
+        | "agent"
+        | "initiative";
       idKey: string;
     }
   | {
@@ -141,7 +142,8 @@ async function lookupWorkspaceId(
     | "column"
     | "workflowRule"
     | "customField"
-    | "agent",
+    | "agent"
+    | "initiative",
   id: string,
 ): Promise<string | null> {
   try {
@@ -298,6 +300,15 @@ async function lookupWorkspaceId(
         return agent?.workspaceId || null;
       }
 
+      case "initiative": {
+        const [initiative] = await db
+          .select({ workspaceId: schema.initiativeTable.workspaceId })
+          .from(schema.initiativeTable)
+          .where(eq(schema.initiativeTable.id, id))
+          .limit(1);
+        return initiative?.workspaceId || null;
+      }
+
       default:
         return null;
     }
@@ -394,6 +405,11 @@ export const workspaceAccess = {
   fromCustomField: (idKey = "id") =>
     workspaceAccessMiddleware({
       sources: [{ type: "lookup", resource: "customField", idKey }],
+    }),
+
+  fromInitiative: (idKey = "id") =>
+    workspaceAccessMiddleware({
+      sources: [{ type: "lookup", resource: "initiative", idKey }],
     }),
 
   fromAgent: (idKey = "id") =>

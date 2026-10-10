@@ -34,6 +34,7 @@ import giteaIntegration, { handleGiteaWebhookRoute } from "./gitea-integration";
 import githubIntegration, {
   handleGithubWebhookRoute,
 } from "./github-integration";
+import initiative from "./initiative";
 import getInstanceStatus from "./instance/controllers/get-instance-status";
 import invitation from "./invitation";
 import label from "./label";
@@ -577,6 +578,7 @@ export function createApp() {
 
   const billingApi = api.route("/billing", billing);
   const projectApi = api.route("/project", project);
+  const initiativeApi = api.route("/initiative", initiative);
   const taskApi = api.route("/task", task);
   const columnApi = api.route("/column", column);
   const activityApi = api.route("/activity", activity);
@@ -775,6 +777,7 @@ export function createApp() {
     notificationApi,
     notificationPreferencesApi,
     projectApi,
+    initiativeApi,
     publicProjectApi,
     searchApi,
     mattermostIntegrationApi,
@@ -898,6 +901,7 @@ const {
   notificationApi,
   notificationPreferencesApi,
   projectApi,
+  initiativeApi,
   publicProjectApi,
   searchApi,
   slackIntegrationApi,
@@ -926,6 +930,7 @@ export type AppType =
   | typeof billingApi
   | typeof configApi
   | typeof projectApi
+  | typeof initiativeApi
   | typeof taskApi
   | typeof columnApi
   | typeof activityApi

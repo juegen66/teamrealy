@@ -344,6 +344,20 @@
 			"when": 1791512481974,
 			"tag": "0048_tan_daimon_hellstrom",
 			"breakpoints": true
+		},
+		{
+			"idx": 49,
+			"version": "7",
+			"when": 1791542070267,
+			"tag": "0049_curvy_the_phantom",
+			"breakpoints": true
+		},
+		{
+			"idx": 50,
+			"version": "7",
+			"when": 1791546500886,
+			"tag": "0050_hot_alex_power",
+			"breakpoints": true
 		}
 	]
 }

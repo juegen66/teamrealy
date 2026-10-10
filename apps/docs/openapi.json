@@ -592,6 +592,254 @@
           "lastTaskNumber"
         ]
       },
+      "InitiativeDetail": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Initiative"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "projects": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InitiativeProject"
+                }
+              },
+              "links": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/InitiativeLink"
+                }
+              },
+              "totalTasks": {
+                "type": "number"
+              },
+              "completedTasks": {
+                "type": "number"
+              },
+              "completionPercentage": {
+                "type": "number",
+                "description": "Share of tasks in done or archived columns across the linked projects, 0 to 100."
+              }
+            },
+            "required": [
+              "projects",
+              "links",
+              "totalTasks",
+              "completedTasks",
+              "completionPercentage"
+            ]
+          }
+        ]
+      },
+      "InitiativeProject": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "archivedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "totalTasks": {
+            "type": "number"
+          },
+          "completedTasks": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "icon",
+          "archivedAt",
+          "totalTasks",
+          "completedTasks"
+        ]
+      },
+      "InitiativeLink": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "initiativeId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "initiativeId",
+          "title",
+          "url",
+          "createdAt"
+        ]
+      },
+      "Initiative": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "workspaceId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "icon": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "color": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "description": "planned, active, paused, completed, or cancelled"
+          },
+          "priority": {
+            "type": "string",
+            "description": "no-priority, low, medium, high, or urgent"
+          },
+          "ownerId": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "targetDate": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "workspaceId",
+          "name",
+          "summary",
+          "description",
+          "icon",
+          "color",
+          "status",
+          "priority",
+          "ownerId",
+          "targetDate",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "InitiativeUpdate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "initiativeId": {
+            "type": "string"
+          },
+          "health": {
+            "type": "string",
+            "description": "on-track, at-risk, or off-track"
+          },
+          "body": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "author": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "image": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "name",
+              "image"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "initiativeId",
+          "health",
+          "body",
+          "createdAt",
+          "author"
+        ]
+      },
       "BoardResponse": {
         "type": "object",
         "properties": {
@@ -1283,6 +1531,20 @@
               "null"
             ]
           },
+          "schedule": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Cron expression that triggers scheduled runs, or null when the agent is not scheduled"
+          },
+          "scheduleTimezone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "IANA timezone the schedule is evaluated in. Null means UTC"
+          },
           "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -1298,6 +1560,8 @@
           "name",
           "instructions",
           "model",
+          "schedule",
+          "scheduleTimezone",
           "createdAt",
           "updatedAt"
         ]
@@ -6430,6 +6694,853 @@
         }
       }
     },
+    "/initiative": {
+      "get": {
+        "operationId": "listInitiatives",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "List initiatives",
+        "description": "List a workspace's initiatives, newest first, each with its linked projects and task completion rollup.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "workspaceId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of initiatives",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InitiativeDetail"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createInitiative",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "Create initiative",
+        "description": "Create an initiative, optionally linking projects. Requires project:create.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "workspaceId": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "summary": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "planned",
+                      "active",
+                      "paused",
+                      "completed",
+                      "cancelled"
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "no-priority",
+                      "low",
+                      "medium",
+                      "high",
+                      "urgent"
+                    ]
+                  },
+                  "ownerId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "targetDate": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  },
+                  "projectIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "workspaceId",
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The created initiative",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiativeDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/initiative/{id}": {
+      "get": {
+        "operationId": "getInitiative",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "Get initiative",
+        "description": "Get a single initiative with its linked projects and rollup.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Initiative details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiativeDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initiative not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateInitiative",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "Update initiative",
+        "description": "Partially update an initiative. Only the fields present in the body change; send null to clear a nullable field. Requires project:update.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "summary": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "description": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "icon": {
+                    "type": "string"
+                  },
+                  "color": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "planned",
+                      "active",
+                      "paused",
+                      "completed",
+                      "cancelled"
+                    ]
+                  },
+                  "priority": {
+                    "type": "string",
+                    "enum": [
+                      "no-priority",
+                      "low",
+                      "medium",
+                      "high",
+                      "urgent"
+                    ]
+                  },
+                  "ownerId": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "targetDate": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "format": "date-time"
+                  }
+                },
+                "description": "Only the fields present in the body are changed. Send null to clear a nullable field."
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated initiative",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiativeDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initiative not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteInitiative",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "Delete initiative",
+        "description": "Delete an initiative. Linked projects and their tasks are kept. Requires project:delete.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The deleted initiative",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Initiative"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initiative not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/initiative/{id}/projects": {
+      "put": {
+        "operationId": "setInitiativeProjects",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "Set initiative projects",
+        "description": "Replace the set of projects linked to an initiative. Requires project:update.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "projectIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    },
+                    "description": "The complete set of projects linked to the initiative. Projects not listed are unlinked."
+                  }
+                },
+                "required": [
+                  "projectIds"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated initiative",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiativeDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initiative not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/initiative/{id}/links": {
+      "post": {
+        "operationId": "addInitiativeLink",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "Add initiative resource link",
+        "description": "Attach an http(s) resource link to an initiative. Requires project:update.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string"
+                  },
+                  "url": {
+                    "type": "string",
+                    "maxLength": 2048,
+                    "format": "uri"
+                  }
+                },
+                "required": [
+                  "url"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The updated initiative",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiativeDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initiative not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/initiative/{id}/links/{linkId}": {
+      "delete": {
+        "operationId": "deleteInitiativeLink",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "Remove initiative resource link",
+        "description": "Remove a resource link from an initiative. Requires project:update.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "linkId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The updated initiative",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiativeDetail"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initiative not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/initiative/{id}/updates": {
+      "get": {
+        "operationId": "listInitiativeUpdates",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "List initiative updates",
+        "description": "List status updates posted on an initiative, newest first.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Initiative updates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InitiativeUpdate"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initiative not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createInitiativeUpdate",
+        "tags": [
+          "Initiatives"
+        ],
+        "summary": "Post initiative update",
+        "description": "Post a health update (on-track, at-risk, off-track) on an initiative. Requires project:update.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "health": {
+                    "type": "string",
+                    "enum": [
+                      "on-track",
+                      "at-risk",
+                      "off-track"
+                    ]
+                  },
+                  "body": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "required": [
+                  "health",
+                  "body"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The created update",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InitiativeUpdate"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request, or workspace ID could not be determined",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid credentials"
+          },
+          "403": {
+            "description": "No workspace access, or missing permission",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Initiative not found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/task/tasks/{projectId}": {
       "get": {
         "operationId": "listTasks",
@@ -9049,6 +10160,20 @@
                   },
                   "model": {
                     "type": "string"
+                  },
+                  "schedule": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "5-field cron expression for scheduled runs, for example 0 9 * * 1-5. Null or an empty string clears it; omit to leave it unchanged on update."
+                  },
+                  "scheduleTimezone": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "IANA timezone name the schedule is evaluated in, for example Europe/Berlin. Null or an empty string means UTC; omit to leave it unchanged on update."
                   }
                 },
                 "required": [
@@ -9104,7 +10229,7 @@
           "Agents"
         ],
         "summary": "Update agent",
-        "description": "Update an agent's name, instructions, or model. Requires workspace:manage_settings.",
+        "description": "Update an agent's name, instructions, model, or cron schedule and timezone. Requires workspace:manage_settings.",
         "parameters": [
           {
             "schema": {
@@ -9132,6 +10257,20 @@
                   },
                   "model": {
                     "type": "string"
+                  },
+                  "schedule": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "5-field cron expression for scheduled runs, for example 0 9 * * 1-5. Null or an empty string clears it; omit to leave it unchanged on update."
+                  },
+                  "scheduleTimezone": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "description": "IANA timezone name the schedule is evaluated in, for example Europe/Berlin. Null or an empty string means UTC; omit to leave it unchanged on update."
                   }
                 },
                 "required": [

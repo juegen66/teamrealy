@@ -14,6 +14,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import useGetConfig from "@/hooks/queries/config/use-get-config";
 import { usePendingInvitations } from "@/hooks/queries/invitation/use-pending-invitations";
 import useActiveWorkspace from "@/hooks/queries/workspace/use-active-workspace";
 
@@ -22,6 +23,7 @@ export function NavMain() {
   const { data: workspace } = useActiveWorkspace();
   const navigate = useNavigate();
   const { data: invitations = [] } = usePendingInvitations();
+  const { data: config } = useGetConfig();
 
   if (!workspace) return null;
 
@@ -36,6 +38,14 @@ export function NavMain() {
       badge: null,
     },
     {
+      title: t("navigation:sidebar.initiatives"),
+      url: `/dashboard/workspace/${workspace.id}/initiatives`,
+      isActive: window.location.pathname.startsWith(
+        `/dashboard/workspace/${workspace.id}/initiatives`,
+      ),
+      badge: null,
+    },
+    {
       title: t("navigation:sidebar.members"),
       url: `/dashboard/workspace/${workspace.id}/members`,
       isActive:
@@ -43,6 +53,18 @@ export function NavMain() {
         `/dashboard/workspace/${workspace.id}/members`,
       badge: null,
     },
+    ...(config?.hasAi
+      ? [
+          {
+            title: t("navigation:sidebar.agents"),
+            url: `/dashboard/workspace/${workspace.id}/agents`,
+            isActive:
+              window.location.pathname ===
+              `/dashboard/workspace/${workspace.id}/agents`,
+            badge: null,
+          },
+        ]
+      : []),
     {
       title: t("navigation:sidebar.invitations"),
       url: "/dashboard/invitations",
