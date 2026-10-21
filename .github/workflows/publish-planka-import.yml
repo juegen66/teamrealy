@@ -36,7 +36,7 @@ jobs:
       # NODE_AUTH_TOKEN, and npm only attempts the tokenless OIDC exchange when
       # no auth is configured. Node 24 is required for npm >= 11.5.1 (OIDC).
       - name: Setup Node.js
-        uses: actions/setup-node@v7
+        uses: actions/setup-node@v7.1.0
         with:
           node-version: 24
           cache: pnpm
